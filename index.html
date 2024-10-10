@@ -1,105 +1,94 @@
-<html>
-  <head>
-    <meta charset="UTF-8" />
-  </head>
-
-  <body>
-    <a
-      target="_blank"
-      href="https://github.com/bumbeishvili/d3-organization-chart"
-    >
-      <img
-        style="position: fixed; top: 0; right: 0; border: 0; z-index: 2"
-        width="149"
-        height="149"
-        src="https://bumbeishvili.github.io/d3-tooltip/forkme.png"
-        alt="Fork me on GitHub"
-      />
-    </a>
-
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/d3-org-chart@2.6.0"></script>
-    <script src="https://cdn.jsdelivr.net/npm/d3-flextree@2.1.2/build/d3-flextree.js"></script>
-    <div
-      class="chart-container"
-      style="height: 1200px; background-color: #fffeff"
-    ></div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D3 Organization Chart</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .chart-container {
+            width: 100%;
+            height: 1200px;
+            background-color: #fffeff;
+        }
+    </style>
     <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
-      rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+        rel="stylesheet"
     />
+</head>
+<body>
+
+    <h1>Sample Organization Chart</h1>
+    <div class="chart-container"></div>
+
+    <!-- D3.js Library -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- d3-org-chart Library -->
+    <script src="https://cdn.jsdelivr.net/npm/d3-org-chart@2.6.0"></script>
+    <!-- d3-flextree Library -->
+    <script src="https://cdn.jsdelivr.net/npm/d3-flextree@2.1.2/build/d3-flextree.js"></script>
 
     <script>
-      var chart;
-      d3.csv(
-        'https://raw.githubusercontent.com/bumbeishvili/sample-data/main/org.csv'
-      ).then((dataFlattened) => {
+        var chart;
+
+        // Sample data embedded in the code
+        const dataFlattened = [
+            { id: "1", parentId: "", name: "Ian Devling", positionName: "Chief Executive Officer", imageUrl: "https://randomuser.me/api/portraits/men/1.jpg" },
+            { id: "2", parentId: "1", name: "Davolio Nancy", positionName: "CTO", imageUrl: "https://randomuser.me/api/portraits/women/2.jpg" },
+            { id: "3", parentId: "1", name: "Leverling Janet", positionName: "CFO", imageUrl: "https://randomuser.me/api/portraits/women/3.jpg" },
+            { id: "4", parentId: "2", name: "Smith Alice", positionName: "Dev Manager", imageUrl: "https://randomuser.me/api/portraits/women/4.jpg" },
+            { id: "5", parentId: "2", name: "Johnson Charlie", positionName: "QA Manager", imageUrl: "https://randomuser.me/api/portraits/men/5.jpg" },
+            { id: "6", parentId: "3", name: "Williams Eva", positionName: "Financial Analyst", imageUrl: "https://randomuser.me/api/portraits/women/6.jpg" },
+            { id: "7", parentId: "3", name: "Thomas Frank", positionName: "Accountant", imageUrl: "https://randomuser.me/api/portraits/men/7.jpg" }
+        ];
+
+        // Initialize the organization chart
         chart = new d3.OrgChart()
           .container('.chart-container')
           .data(dataFlattened)
           .nodeHeight((d) => 85)
-          .nodeWidth((d) => {
-            return 220;
-          })
+          .nodeWidth((d) => 220)
           .childrenMargin((d) => 50)
           .compactMarginBetween((d) => 25)
           .compactMarginPair((d) => 50)
           .neightbourMargin((a, b) => 25)
           .siblingsMargin((d) => 25)
-          .buttonContent(({ node, state }) => {
-            return `<div style="px;color:#716E7B;border-radius:5px;padding:4px;font-size:10px;margin:auto auto;background-color:white;border: 1px solid #E4E2E9"> <span style="font-size:9px">${
-              node.children
-                ? `<i class="fas fa-angle-up"></i>`
-                : `<i class="fas fa-angle-down"></i>`
-            }</span> ${node.data._directSubordinates}  </div>`;
+          .buttonContent(({ node }) => {
+            return `<div style="px;color:#716E7B;border-radius:5px;padding:4px;font-size:10px;margin:auto auto;background-color:white;border: 1px solid #E4E2E9"> 
+                        <span style="font-size:9px">${node.children ? `<i class="fas fa-angle-up"></i>` : `<i class="fas fa-angle-down"></i>`}</span> 
+                        ${node.data._directSubordinates} 
+                    </div>`;
           })
-          .linkUpdate(function (d, i, arr) {
+          .linkUpdate(function (d) {
             d3.select(this)
-              .attr('stroke', (d) =>
-                d.data._upToTheRootHighlighted ? '#152785' : '#E4E2E9'
-              )
-              .attr('stroke-width', (d) =>
-                d.data._upToTheRootHighlighted ? 5 : 1
-              );
+              .attr('stroke', (d) => d.data._upToTheRootHighlighted ? '#152785' : '#E4E2E9')
+              .attr('stroke-width', (d) => d.data._upToTheRootHighlighted ? 5 : 1);
 
             if (d.data._upToTheRootHighlighted) {
               d3.select(this).raise();
             }
           })
-          .nodeContent(function (d, i, arr, state) {
+          .nodeContent(function (d) {
             const color = '#FFFFFF';
             return `
-            <div style="font-family: 'Inter', sans-serif;background-color:${color}; position:absolute;margin-top:-1px; margin-left:-1px;width:${d.width}px;height:${d.height}px;border-radius:10px;border: 1px solid #E4E2E9">
-               <div style="background-color:${color};position:absolute;margin-top:-25px;margin-left:${15}px;border-radius:100px;width:50px;height:50px;" ></div>
-               <img src=" ${
-                 d.data.imageUrl
-               }" style="position:absolute;margin-top:-20px;margin-left:${20}px;border-radius:100px;width:40px;height:40px;" />
-               
-              <div style="color:#08011E;position:absolute;right:20px;top:17px;font-size:10px;"><i class="fas fa-ellipsis-h"></i></div>
-
-              <div style="font-size:15px;color:#08011E;margin-left:20px;margin-top:32px"> ${
-                d.data.name
-              } </div>
-              <div style="color:#716E7B;margin-left:20px;margin-top:3px;font-size:10px;"> ${
-                d.data.positionName
-              } </div>
-
-
-           </div>
-  `;
+                <div style="font-family: 'Inter', sans-serif; background-color:${color}; position:absolute; margin-top:-1px; margin-left:-1px; width:${d.width}px; height:${d.height}px; border-radius:10px; border: 1px solid #E4E2E9">
+                    <div style="background-color:${color}; position:absolute; margin-top:-25px; margin-left:${15}px; border-radius:100px; width:50px; height:50px;"></div>
+                    <img src="${d.data.imageUrl}" style="position:absolute; margin-top:-20px; margin-left:${20}px; border-radius:100px; width:40px; height:40px;" />
+                    <div style="color:#08011E; position:absolute; right:20px; top:17px; font-size:10px;">
+                        <i class="fas fa-ellipsis-h"></i>
+                    </div>
+                    <div style="font-size:15px; color:#08011E; margin-left:20px; margin-top:32px">${d.data.name}</div>
+                    <div style="color:#716E7B; margin-left:20px; margin-top:3px; font-size:10px;">${d.data.positionName}</div>
+                </div>
+            `;
           })
           .render();
-      });
     </script>
-  </body>
-  <script src="https://storage.ko-fi.com/cdn/scripts/overlay-widget.js"></script>
-  <script>
-    kofiWidgetOverlay.draw('bumbeishvili', {
-      type: 'floating-chat',
-      'floating-chat.donateButton.text': 'Tip Us',
-      'floating-chat.donateButton.background-color': '#00b9fe',
-      'floating-chat.donateButton.text-color': '#fff',
-    });
-  </script>
+</body>
 </html>
-
