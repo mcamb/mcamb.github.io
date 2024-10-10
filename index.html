@@ -4,74 +4,58 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D3 Organization Chart</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-org-chart@2.6.0/index.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
         }
-        .chart-container {
+        #chart-container {
             width: 100%;
-            height: 500px;
-            margin: 50px auto;
+            height: 600px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>
 <body>
-    <div class="chart-container" id="chart"></div>
-
-    <!-- D3.js Library -->
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-
-    <!-- Corrected Bumbeishvili Org Chart Library -->
-    <script src="https://cdn.jsdelivr.net/npm/d3-org-chart@2.1.1/dist/d3-org-chart.min.js"></script>
+    <h1>Organization Chart</h1>
+    <div id="chart-container"></div>
 
     <script>
         const data = [
-            {
-                id: 1,
-                name: "CEO",
-                title: "John Doe",
-                children: [
-                    {
-                        id: 2,
-                        name: "CTO",
-                        title: "Jane Smith",
-                        children: [
-                            {
-                                id: 3,
-                                name: "Dev Manager",
-                                title: "Mike Johnson",
-                                children: [
-                                    {
-                                        id: 4,
-                                        name: "Developer",
-                                        title: "Emma Brown"
-                                    },
-                                    {
-                                        id: 5,
-                                        name: "Developer",
-                                        title: "Jack Wilson"
-                                    }
-                                ]
-                            }
-                        ]
-                    },
-                    {
-                        id: 6,
-                        name: "CFO",
-                        title: "Laura Green"
-                    }
-                ]
-            }
+            { id: "1", parentId: "", name: "John Doe", role: "CEO", imageUrl: "https://picsum.photos/id/1/200" },
+            { id: "2", parentId: "1", name: "Jane Smith", role: "CTO", imageUrl: "https://picsum.photos/id/2/200" },
+            { id: "3", parentId: "1", name: "Bob Johnson", role: "CFO", imageUrl: "https://picsum.photos/id/3/200" },
+            { id: "4", parentId: "2", name: "Alice Brown", role: "Dev Manager", imageUrl: "https://picsum.photos/id/4/200" },
+            { id: "5", parentId: "2", name: "Charlie Davis", role: "QA Manager", imageUrl: "https://picsum.photos/id/5/200" },
+            { id: "6", parentId: "3", name: "Eva Wilson", role: "Financial Analyst", imageUrl: "https://picsum.photos/id/6/200" },
+            { id: "7", parentId: "3", name: "Frank Thomas", role: "Accountant", imageUrl: "https://picsum.photos/id/7/200" }
         ];
 
         const chart = new d3.OrgChart()
-            .container(document.getElementById('chart'))
+            .container('#chart-container')
             .data(data)
-            .nodeHeight(() => 100)
-            .nodeWidth(() => 200)
-            .childrenMargin(() => 40)
-            .compact(false)
-            .render();
+            .nodeWidth((d) => 250)
+            .nodeHeight((d) => 120)
+            .childrenMargin((d) => 50)
+            .compactMarginBetween((d) => 35)
+            .compactMarginPair((d) => 30)
+            .nodeContent((d, i, arr, state) => {
+                return `
+                    <div style="padding-top:30px;background-color:white;margin-left:1px;height:${d.height}px;border-radius:10px;overflow:visible;">
+                        <img src="${d.data.imageUrl}" style="margin-top:-30px;margin-left:${d.width/2-30}px;border-radius:100px;width:60px;height:60px;" />
+                        <div style="margin-top:15px;color:#08011E;font-size:16px;font-weight:bold;">${d.data.name}</div>
+                        <div style="color:#716E7B;margin-top:5px;font-size:14px;">${d.data.role}</div>
+                    </div>
+                `;
+            });
+
+        chart.render();
     </script>
 </body>
 </html>
