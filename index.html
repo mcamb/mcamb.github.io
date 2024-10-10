@@ -34,11 +34,22 @@
         // Load CSV data and initialize the org chart
         d3.csv("https://raw.githubusercontent.com/bumbeishvili/sample-data/main/org.csv")
           .then((data) => {
-            // Initialize the organization chart
+            // Initialize the organization chart with custom node content
             chart = new d3.OrgChart()
-              .container(".chart-container")  // Set container for the chart
-              .data(data)                      // Set the data from CSV
-              .render();                       // Render the chart
+              .container(".chart-container")
+              .data(data)
+              .nodeWidth((d) => 300)  // Set node width
+              .nodeHeight((d) => 200)  // Set node height
+              .nodeContent(function(d) {
+                return `
+                  <div style="padding:10px; text-align: center;">
+                    <img src="${d.data.imageUrl}" style="width: 50px; height: 50px; border-radius: 50%;">
+                    <div style="font-size: 16px; font-weight: bold;">${d.data.name}</div>
+                    <div style="font-size: 14px; color: gray;">${d.data.role}</div>
+                  </div>
+                `;
+              })
+              .render();
         });
     </script>
 </body>
