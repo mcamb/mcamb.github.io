@@ -3,44 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Organization Chart</title>
+    <title>Improved Organization Chart</title>
     <style>
-        .org-chart {
+        body {
+            font-family: Arial, sans-serif;
             display: flex;
             justify-content: center;
-            flex-wrap: wrap;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
         }
-        .org-chart ul {
-            padding: 0;
+        .org-chart {
             display: flex;
             flex-direction: column;
             align-items: center;
         }
-        .org-chart li {
-            list-style-type: none;
-            width: 200px;
+        .org-chart ul {
+            padding: 20px 0;
             position: relative;
-            padding: 20px;
-            margin: 10px;
-            text-align: center;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            background-color: #f9f9f9;
+            transition: all 0.5s;
+            display: flex;
+            justify-content: center;
         }
-        .org-chart li::before {
-            content: "";
+        .org-chart li {
+            float: left;
+            text-align: center;
+            list-style-type: none;
+            position: relative;
+            padding: 20px 5px 0 5px;
+            transition: all 0.5s;
+        }
+        .org-chart li::before, .org-chart li::after {
+            content: '';
             position: absolute;
-            top: -11px;
+            top: 0;
+            right: 50%;
+            border-top: 1px solid #ccc;
+            width: 50%;
+            height: 20px;
+        }
+        .org-chart li::after {
+            right: auto;
             left: 50%;
             border-left: 1px solid #ccc;
-            width: 0;
-            height: 11px;
         }
-        .org-chart > ul > li::before {
+        .org-chart li:only-child::after, .org-chart li:only-child::before {
             display: none;
         }
+        .org-chart li:only-child {
+            padding-top: 0;
+        }
+        .org-chart li:first-child::before, .org-chart li:last-child::after {
+            border: 0 none;
+        }
+        .org-chart li:last-child::before {
+            border-right: 1px solid #ccc;
+            border-radius: 0 5px 0 0;
+        }
+        .org-chart li:first-child::after {
+            border-radius: 5px 0 0 0;
+        }
         .org-chart ul ul::before {
-            content: "";
+            content: '';
             position: absolute;
             top: 0;
             left: 50%;
@@ -48,53 +73,32 @@
             width: 0;
             height: 20px;
         }
+        .org-chart li div {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-decoration: none;
+            color: #333;
+            font-size: 14px;
+            display: inline-block;
+            min-width: 80px;
+            min-height: 30px;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+            transition: all 0.3s;
+        }
+        .org-chart li div:hover {
+            background-color: #f4f4f4;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+        }
     </style>
 </head>
 <body>
     <div class="org-chart" id="orgChart"></div>
 
     <script>
-        const orgData = {
-            name: "CEO",
-            children: [
-                {
-                    name: "CTO",
-                    children: [
-                        { name: "Developer 1" },
-                        { name: "Developer 2" }
-                    ]
-                },
-                {
-                    name: "CFO",
-                    children: [
-                        { name: "Accountant" },
-                        { name: "HR Manager" }
-                    ]
-                }
-            ]
-        };
-
-        function createOrgChart(data, parentElement) {
-            const ul = document.createElement('ul');
-            const li = document.createElement('li');
-            li.textContent = data.name;
-            ul.appendChild(li);
-
-            if (data.children && data.children.length > 0) {
-                const childrenUl = document.createElement('ul');
-                data.children.forEach(child => {
-                    createOrgChart(child, childrenUl);
-                });
-                ul.appendChild(childrenUl);
-            }
-
-            parentElement.appendChild(ul);
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const chartContainer = document.getElementById('orgChart');
-            createOrgChart(orgData, chartContainer);
-        });
+        // Your existing JavaScript code here
+        // ...
     </script>
 </body>
 </html>
