@@ -22,42 +22,68 @@
             height: 100%;
             background-color: white;
         }
+        #error-message {
+            color: red;
+            font-weight: bold;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
+    <div id="error-message"></div>
     <div id="chart"></div>
     <script>
-        const data = [
-            { id: "1", parentId: "", name: "CEO", imageUrl: "https://cdn.balkan.app/shared/2.jpg" },
-            { id: "2", parentId: "1", name: "CTO", imageUrl: "https://cdn.balkan.app/shared/3.jpg" },
-            { id: "3", parentId: "1", name: "CFO", imageUrl: "https://cdn.balkan.app/shared/4.jpg" },
-            { id: "4", parentId: "2", name: "Developer 1", imageUrl: "https://cdn.balkan.app/shared/5.jpg" },
-            { id: "5", parentId: "2", name: "Developer 2", imageUrl: "https://cdn.balkan.app/shared/6.jpg" },
-            { id: "6", parentId: "3", name: "Accountant", imageUrl: "https://cdn.balkan.app/shared/7.jpg" },
-            { id: "7", parentId: "3", name: "HR Manager", imageUrl: "https://cdn.balkan.app/shared/8.jpg" }
-        ];
+        function showError(message) {
+            document.getElementById('error-message').textContent = message;
+        }
 
-        const chart = new d3.OrgChart()
-            .container("#chart")
-            .data(data)
-            .nodeWidth((d) => 250)
-            .nodeHeight((d) => 180)
-            .childrenMargin((d) => 50)
-            .compactMarginBetween((d) => 25)
-            .compactMarginPair((d) => 50)
-            .nodeContent((d, i, arr, state) => {
-                return `
-                    <div style="padding-top:30px;background-color:none;margin-left:1px;height:${d.height}px;border-radius:2px;overflow:visible">
-                        <div style="height:${d.height - 32}px;padding-top:15px;background-color:white;border:1px solid lightgray;">
-                            <img src="${d.data.imageUrl}" style="margin-top:-30px;margin-left:${d.width / 2 - 30}px;border-radius:100px;width:60px;height:60px;" />
-                            <div style="margin-top:15px;color:#111672;font-size:16px;font-weight:bold;"> ${d.data.name} </div>
-                            <div style="color:#404040;margin-top:5px;font-size:14px;"> ${d.data.positionName || ''} </div>
+        try {
+            console.log("Starting chart initialization...");
+            const data = [
+                { id: "1", parentId: "", name: "CEO", imageUrl: "https://cdn.balkan.app/shared/2.jpg" },
+                { id: "2", parentId: "1", name: "CTO", imageUrl: "https://cdn.balkan.app/shared/3.jpg" },
+                { id: "3", parentId: "1", name: "CFO", imageUrl: "https://cdn.balkan.app/shared/4.jpg" },
+                { id: "4", parentId: "2", name: "Developer 1", imageUrl: "https://cdn.balkan.app/shared/5.jpg" },
+                { id: "5", parentId: "2", name: "Developer 2", imageUrl: "https://cdn.balkan.app/shared/6.jpg" },
+                { id: "6", parentId: "3", name: "Accountant", imageUrl: "https://cdn.balkan.app/shared/7.jpg" },
+                { id: "7", parentId: "3", name: "HR Manager", imageUrl: "https://cdn.balkan.app/shared/8.jpg" }
+            ];
+
+            console.log("Data loaded:", data);
+
+            if (typeof d3.OrgChart !== 'function') {
+                throw new Error("d3.OrgChart is not a function. The library might not be loaded correctly.");
+            }
+
+            const chart = new d3.OrgChart()
+                .container("#chart")
+                .data(data)
+                .nodeWidth((d) => 250)
+                .nodeHeight((d) => 180)
+                .childrenMargin((d) => 50)
+                .compactMarginBetween((d) => 25)
+                .compactMarginPair((d) => 50)
+                .nodeContent((d, i, arr, state) => {
+                    return `
+                        <div style="padding-top:30px;background-color:none;margin-left:1px;height:${d.height}px;border-radius:2px;overflow:visible">
+                            <div style="height:${d.height - 32}px;padding-top:15px;background-color:white;border:1px solid lightgray;">
+                                <img src="${d.data.imageUrl}" style="margin-top:-30px;margin-left:${d.width / 2 - 30}px;border-radius:100px;width:60px;height:60px;" />
+                                <div style="margin-top:15px;color:#111672;font-size:16px;font-weight:bold;"> ${d.data.name} </div>
+                                <div style="color:#404040;margin-top:5px;font-size:14px;"> ${d.data.positionName || ''} </div>
+                            </div>
                         </div>
-                    </div>
-                `;
-            });
+                    `;
+                });
 
-        chart.render();
+            console.log("Chart object created:", chart);
+            chart.render();
+            console.log("Chart rendered");
+        } catch (error) {
+            console.error("An error occurred:", error);
+            showError("An error occurred while creating the chart. Please check the console for details.");
+        }
     </script>
+</body>
+</html>
 </body>
 </html>
