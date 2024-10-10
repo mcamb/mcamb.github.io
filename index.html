@@ -3,87 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Organization Chart</title>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/d3-org-chart@2.6.0/index.js"></script>
+    <title>Simple Organization Chart</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
+        .org-chart {
             display: flex;
             justify-content: center;
+            flex-wrap: wrap;
+        }
+        .org-chart ul {
+            padding: 0;
+            display: flex;
+            flex-direction: column;
             align-items: center;
-            height: 100vh;
-            background-color: #f0f0f0;
         }
-        #chart {
-            width: 100%;
-            height: 100%;
-            background-color: white;
-        }
-        #error-message {
-            color: red;
-            font-weight: bold;
+        .org-chart li {
+            list-style-type: none;
+            width: 200px;
+            position: relative;
+            padding: 20px;
+            margin: 10px;
             text-align: center;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .org-chart li::before {
+            content: "";
+            position: absolute;
+            top: -11px;
+            left: 50%;
+            border-left: 1px solid #ccc;
+            width: 0;
+            height: 11px;
+        }
+        .org-chart > ul > li::before {
+            display: none;
+        }
+        .org-chart ul ul::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 50%;
+            border-left: 1px solid #ccc;
+            width: 0;
+            height: 20px;
         }
     </style>
 </head>
 <body>
-    <div id="error-message"></div>
-    <div id="chart"></div>
+    <div class="org-chart" id="orgChart"></div>
+
     <script>
-        function showError(message) {
-            document.getElementById('error-message').textContent = message;
-        }
+        const orgData = {
+            name: "CEO",
+            children: [
+                {
+                    name: "CTO",
+                    children: [
+                        { name: "Developer 1" },
+                        { name: "Developer 2" }
+                    ]
+                },
+                {
+                    name: "CFO",
+                    children: [
+                        { name: "Accountant" },
+                        { name: "HR Manager" }
+                    ]
+                }
+            ]
+        };
 
-        try {
-            console.log("Starting chart initialization...");
-            const data = [
-                { id: "1", parentId: "", name: "CEO", imageUrl: "https://cdn.balkan.app/shared/2.jpg" },
-                { id: "2", parentId: "1", name: "CTO", imageUrl: "https://cdn.balkan.app/shared/3.jpg" },
-                { id: "3", parentId: "1", name: "CFO", imageUrl: "https://cdn.balkan.app/shared/4.jpg" },
-                { id: "4", parentId: "2", name: "Developer 1", imageUrl: "https://cdn.balkan.app/shared/5.jpg" },
-                { id: "5", parentId: "2", name: "Developer 2", imageUrl: "https://cdn.balkan.app/shared/6.jpg" },
-                { id: "6", parentId: "3", name: "Accountant", imageUrl: "https://cdn.balkan.app/shared/7.jpg" },
-                { id: "7", parentId: "3", name: "HR Manager", imageUrl: "https://cdn.balkan.app/shared/8.jpg" }
-            ];
+        function createOrgChart(data, parentElement) {
+            const ul = document.createElement('ul');
+            const li = document.createElement('li');
+            li.textContent = data.name;
+            ul.appendChild(li);
 
-            console.log("Data loaded:", data);
-
-            if (typeof d3.OrgChart !== 'function') {
-                throw new Error("d3.OrgChart is not a function. The library might not be loaded correctly.");
+            if (data.children && data.children.length > 0) {
+                const childrenUl = document.createElement('ul');
+                data.children.forEach(child => {
+                    createOrgChart(child, childrenUl);
+                });
+                ul.appendChild(childrenUl);
             }
 
-            const chart = new d3.OrgChart()
-                .container("#chart")
-                .data(data)
-                .nodeWidth((d) => 250)
-                .nodeHeight((d) => 180)
-                .childrenMargin((d) => 50)
-                .compactMarginBetween((d) => 25)
-                .compactMarginPair((d) => 50)
-                .nodeContent((d, i, arr, state) => {
-                    return `
-                        <div style="padding-top:30px;background-color:none;margin-left:1px;height:${d.height}px;border-radius:2px;overflow:visible">
-                            <div style="height:${d.height - 32}px;padding-top:15px;background-color:white;border:1px solid lightgray;">
-                                <img src="${d.data.imageUrl}" style="margin-top:-30px;margin-left:${d.width / 2 - 30}px;border-radius:100px;width:60px;height:60px;" />
-                                <div style="margin-top:15px;color:#111672;font-size:16px;font-weight:bold;"> ${d.data.name} </div>
-                                <div style="color:#404040;margin-top:5px;font-size:14px;"> ${d.data.positionName || ''} </div>
-                            </div>
-                        </div>
-                    `;
-                });
-
-            console.log("Chart object created:", chart);
-            chart.render();
-            console.log("Chart rendered");
-        } catch (error) {
-            console.error("An error occurred:", error);
-            showError("An error occurred while creating the chart. Please check the console for details.");
+            parentElement.appendChild(ul);
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const chartContainer = document.getElementById('orgChart');
+            createOrgChart(orgData, chartContainer);
+        });
     </script>
-</body>
-</html>
 </body>
 </html>
