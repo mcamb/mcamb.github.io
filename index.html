@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D3 Organization Chart</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/d3-org-chart@2.6.0/index.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-org-chart@2.1.1/dist/d3-org-chart.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -39,7 +39,7 @@
             { id: "7", parentId: "3", name: "Frank Thomas", role: "Accountant", imageUrl: "https://picsum.photos/id/7/200" }
         ];
 
-        new Chart()
+        const chart = new d3.OrgChart()
            .container('.chart-container')
            .data(data)
            .svgWidth(window.innerWidth)
@@ -48,6 +48,10 @@
            .onNodeClick(d => console.log(d + ' node clicked'))
            .render();
     </script>
+
+</body>
+</html>
+
 
 </body>
 </html>
