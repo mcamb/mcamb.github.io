@@ -3,94 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Improved Organization Chart</title>
+    <title>D3 Organization Chart</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f0f0f0;
         }
-        .org-chart {
-            display: flex;
-            justify-content: center;
-        }
-        .org-chart ul {
-            padding: 20px 0;
-            position: relative;
-            transition: all 0.5s;
-            display: flex;
-            justify-content: center;
-        }
-        .org-chart li {
-            float: left;
-            text-align: center;
-            list-style-type: none;
-            position: relative;
-            padding: 20px 5px 0 5px;
-        }
-        .org-chart li::before, .org-chart li::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 50%;
-            border-top: 1px solid #ccc;
-            width: 50%;
-            height: 20px;
-        }
-        .org-chart li::after {
-            right: auto;
-            left: 50%;
-            border-left: 1px solid #ccc;
-        }
-        .org-chart li:only-child::after, .org-chart li:only-child::before {
-            display: none;
-        }
-        .org-chart li:first-child::before, .org-chart li:last-child::after {
-            border: 0 none;
-        }
-        .org-chart ul ul::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 50%;
-            border-left: 1px solid #ccc;
-            width: 0;
-            height: 20px;
-        }
-        .org-chart li div {
-            border: 1px solid #ccc;
-            padding: 10px;
-            margin: 0 10px;
-            background-color: white;
-            color: #333;
-            font-size: 14px;
-            font-weight: bold;
-            min-width: 80px;
-            min-height: 30px;
-            display: inline-block;
-            border-radius: 5px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-        }
-        #debug {
-            margin-bottom: 20px;
-            padding: 10px;
-            background-color: #e0e0e0;
-            border-radius: 5px;
+        .chart-container {
+            width: 100%;
+            height: 500px;
+            margin: 50px auto;
         }
     </style>
 </head>
 <body>
-    <h1>Organization Chart</h1>
-    <div id="debug"></div>
-    <div class="org-chart" id="orgChart"></div>
+    <div class="chart-container" id="chart"></div>
+
+    <!-- D3.js Library -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
+    <!-- Bumbeishvili Org Chart Library -->
+    <script src="https://cdn.jsdelivr.net/npm/d3-org-chart@2.1.0/dist/d3-org-chart.min.js"></script>
 
     <script>
-        // Your existing JavaScript code here
-        // ...
+        const data = [
+            {
+                id: 1,
+                name: "CEO",
+                title: "John Doe",
+                children: [
+                    {
+                        id: 2,
+                        name: "CTO",
+                        title: "Jane Smith",
+                        children: [
+                            {
+                                id: 3,
+                                name: "Dev Manager",
+                                title: "Mike Johnson",
+                                children: [
+                                    {
+                                        id: 4,
+                                        name: "Developer",
+                                        title: "Emma Brown"
+                                    },
+                                    {
+                                        id: 5,
+                                        name: "Developer",
+                                        title: "Jack Wilson"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        id: 6,
+                        name: "CFO",
+                        title: "Laura Green"
+                    }
+                ]
+            }
+        ];
+
+        const chart = new d3.OrgChart()
+            .container(document.getElementById('chart'))
+            .data(data)
+            .nodeHeight(() => 100)
+            .nodeWidth(() => 200)
+            .childrenMargin(() => 40)
+            .compact(false)
+            .render();
     </script>
 </body>
 </html>
-    </script>
-</body>
-</html>
+
