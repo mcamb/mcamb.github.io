@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>D3 Organization Chart</title>
+    <title>Organization Chart</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -35,60 +35,102 @@
     <script src="https://cdn.jsdelivr.net/npm/d3-flextree@2.1.2/build/d3-flextree.js"></script>
 
     <script>
-        var chart;
+        document.addEventListener('DOMContentLoaded', function () {
+            // Fetch the data from Google Sheets (CSV format)
+            d3.csv('https://docs.google.com/spreadsheets/d/16AlSV3D_nI3awWZ25tRP_JeqoGd2mpDD2xW_st8l49A/gviz/tq?tqx=out:csv&sheet=Sheet1')
+            .then(dataFlattened => {
+                console.log("Fetched data:", dataFlattened);  // Log the fetched data for debugging
 
-        // Sample data embedded in the code
-        const dataFlattened = [
-            { id: "1", parentId: "", name: "Ian Devling", positionName: "Chief Executive Officer", imageUrl: "https://randomuser.me/api/portraits/men/1.jpg" },
-            { id: "2", parentId: "1", name: "Davolio Nancy", positionName: "CTO", imageUrl: "https://randomuser.me/api/portraits/women/2.jpg" },
-            { id: "3", parentId: "1", name: "Leverling Janet", positionName: "CFO", imageUrl: "https://randomuser.me/api/portraits/women/3.jpg" },
-            { id: "4", parentId: "2", name: "Smith Alice", positionName: "Dev Manager", imageUrl: "https://randomuser.me/api/portraits/women/4.jpg" },
-            { id: "5", parentId: "2", name: "Johnson Charlie", positionName: "QA Manager", imageUrl: "https://randomuser.me/api/portraits/men/5.jpg" },
-            { id: "6", parentId: "3", name: "Williams Eva", positionName: "Financial Analyst", imageUrl: "https://randomuser.me/api/portraits/women/6.jpg" },
-            { id: "7", parentId: "3", name: "Thomas Frank", positionName: "Accountant", imageUrl: "https://randomuser.me/api/portraits/men/7.jpg" }
-        ];
+                // Log the keys of the first row to see the field names
+                console.log("CSV Keys:", Object.keys(dataFlattened[0]));
 
-        // Initialize the organization chart
-        chart = new d3.OrgChart()
-          .container('.chart-container')
-          .data(dataFlattened)
-          .nodeHeight((d) => 85)
-          .nodeWidth((d) => 220)
-          .childrenMargin((d) => 50)
-          .compactMarginBetween((d) => 25)
-          .compactMarginPair((d) => 50)
-          .neightbourMargin((a, b) => 25)
-          .siblingsMargin((d) => 25)
-          .buttonContent(({ node }) => {
-            return `<div style="px;color:#716E7B;border-radius:5px;padding:4px;font-size:10px;margin:auto auto;background-color:white;border: 1px solid #E4E2E9"> 
-                        <span style="font-size:9px">${node.children ? `<i class="fas fa-angle-up"></i>` : `<i class="fas fa-angle-down"></i>`}</span> 
-                        ${node.data._directSubordinates} 
-                    </div>`;
-          })
-          .linkUpdate(function (d) {
-            d3.select(this)
-              .attr('stroke', (d) => d.data._upToTheRootHighlighted ? '#152785' : '#E4E2E9')
-              .attr('stroke-width', (d) => d.data._upToTheRootHighlighted ? 5 : 1);
+                // Explicitly log the parentId values for each node to inspect them
+                dataFlattened.forEach(d => {
+                    console.log(`ID: ${d.id}, ParentID: "${d.parentid}"`);  // Log each parentId as a string to see if any are empty or incorrect
+                });
 
-            if (d.data._upToTheRootHighlighted) {
-              d3.select(this).raise();
-            }
-          })
-          .nodeContent(function (d) {
-            const color = '#FFFFFF';
-            return `
-                <div style="font-family: 'Inter', sans-serif; background-color:${color}; position:absolute; margin-top:-1px; margin-left:-1px; width:${d.width}px; height:${d.height}px; border-radius:10px; border: 1px solid #E4E2E9">
-                    <div style="background-color:${color}; position:absolute; margin-top:-25px; margin-left:${15}px; border-radius:100px; width:50px; height:50px;"></div>
-                    <img src="${d.data.imageUrl}" style="position:absolute; margin-top:-20px; margin-left:${20}px; border-radius:100px; width:40px; height:40px;" />
-                    <div style="color:#08011E; position:absolute; right:20px; top:17px; font-size:10px;">
-                        <i class="fas fa-ellipsis-h"></i>
-                    </div>
-                    <div style="font-size:15px; color:#08011E; margin-left:20px; margin-top:32px">${d.data.name}</div>
-                    <div style="color:#716E7B; margin-left:20px; margin-top:3px; font-size:10px;">${d.data.positionName}</div>
-                </div>
-            `;
-          })
-          .render();
+                // Convert empty parentId values to null
+                const processedData = dataFlattened.map(d => {
+                    return {
+                        id: d.id,
+                        parentId: d['parentid'] && d['parentid'].trim() !== "" ? d['parentid'] : null,  // Access parentId using field name and trim any whitespace
+                        name: d.name,
+                        positionName: d.positionName,
+                        imageUrl: d.imageUrl,
+                        relationshipStatus: d.relationshipStatus
+                    };
+                });
+
+                // Debugging step: Check if there are still multiple root nodes
+                const rootNodes = processedData.filter(d => !d.parentId);
+                console.log("Root nodes found after processing:", rootNodes);
+
+                if (rootNodes.length > 1) {
+                    console.error("Multiple root nodes detected! Only one root node is allowed.");
+                    return;
+                }
+
+                // Relationship colors based on status
+                const relationshipColors = {
+                    "good": "#4CAF50",   // Green for good relationships
+                    "neutral": "#FFC107", // Yellow for neutral relationships
+                    "bad": "#F44336"     // Red for bad relationships
+                };
+
+                // Initialize the organization chart
+                const chart = new d3.OrgChart()
+                  .container('.chart-container')
+                  .data(processedData)
+                  .nodeHeight((d) => 85)
+                  .nodeWidth((d) => 220)
+                  .childrenMargin((d) => 50)
+                  .compactMarginBetween((d) => 25)
+                  .compactMarginPair((d) => 50)
+                  .neightbourMargin((a, b) => 25)
+                  .siblingsMargin((d) => 25)
+                  .buttonContent(({ node }) => {
+                    return `<div style="px;color:#716E7B;border-radius:5px;padding:4px;font-size:10px;margin:auto auto;background-color:white;border: 1px solid #E4E2E9"> 
+                                <span style="font-size:9px">${node.children ? `<i class="fas fa-angle-up"></i>` : `<i class="fas fa-angle-down"></i>`}</span> 
+                                ${node.data._directSubordinates} 
+                            </div>`;
+                  })
+                  .linkUpdate(function (d) {
+                    d3.select(this)
+                      .attr('stroke', (d) => d.data._upToTheRootHighlighted ? '#152785' : '#E4E2E9')
+                      .attr('stroke-width', (d) => d.data._upToTheRootHighlighted ? 5 : 1);
+
+                    if (d.data._upToTheRootHighlighted) {
+                      d3.select(this).raise();
+                    }
+                  })
+                  .nodeContent(function (d) {
+                    // Get the relationship status and corresponding color
+                    const color = relationshipColors[d.data.relationshipStatus] || "#FFFFFF"; // Default to white
+
+                    return `
+                        <div style="font-family: 'Inter', sans-serif; background-color:#FFFFFF; position:absolute; margin-top:-1px; margin-left:-1px; width:${d.width}px; height:${d.height}px; border-radius:10px; border: 1px solid #E4E2E9;">
+                            <div style="position:absolute; margin-top:-25px; margin-left:${15}px; border-radius:100px; width:50px; height:50px;"></div>
+                            <img src="${d.data.imageUrl}" style="position:absolute; margin-top:-20px; margin-left:${20}px; border-radius:100px; width:40px; height:40px;" />
+                            <div style="color:#08011E; position:absolute; right:20px; top:17px; font-size:10px;">
+                                <i class="fas fa-ellipsis-h"></i>
+                            </div>
+                            <div style="font-size:15px; color:#08011E; margin-left:20px; margin-top:32px;">${d.data.name}</div>
+                            <div style="color:#716E7B; margin-left:20px; margin-top:3px; font-size:10px;">${d.data.positionName}</div>
+                            
+                            <!-- Colored circle for relationship status -->
+                            <div style="position:absolute; right:10px; bottom:10px;">
+                                <div style="background-color:${color}; width:15px; height:15px; border-radius:50%;"></div>
+                            </div>
+                        </div>
+                    `;
+                  })
+                  .render();
+            })
+            .catch(error => {
+                console.error("Error loading CSV data:", error);
+            });
+        });
     </script>
+
 </body>
 </html>
