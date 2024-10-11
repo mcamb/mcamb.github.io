@@ -17,9 +17,11 @@
             background-color: #fffeff;
         }
         input[type="search"] {
-            margin-bottom: 10px;
+            width: 100%;
             padding: 10px;
-            width: 300px;
+            margin: 20px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
             font-size: 16px;
         }
     </style>
@@ -30,11 +32,8 @@
 </head>
 <body>
 
-    <h1>Sample Organization Chart with Search</h1>
-
-    <!-- Search input field -->
-    <input type="search" placeholder="Search by name" oninput="filterChart(event)" />
-
+    <h1>Organization Chart with Search</h1>
+    <input type="search" placeholder="Search by name" id="search-box" oninput="filterChart(event)">
     <div class="chart-container"></div>
 
     <!-- D3.js Library -->
@@ -47,60 +46,109 @@
     <script>
         let chart;
 
-        document.addEventListener('DOMContentLoaded', function () {
-            // Fetch the data from Google Sheets (CSV format)
-            d3.csv('https://docs.google.com/spreadsheets/d/16AlSV3D_nI3awWZ25tRP_JeqoGd2mpDD2xW_st8l49A/gviz/tq?tqx=out:csv&sheet=Sheet1')
-            .then(dataFlattened => {
-                console.log("Fetched data:", dataFlattened);
+        // Define the Glide API details
+        const token = "763f7a5d-1c5c-4ecd-ad82-23c8f51e722e"; // Your API token
+        const appId = "YCpdCDbcWA4Z0Zxngymg"; // Your Glide App ID
+        const tableName = "native-table-7eyBHF7WucCtT3GXISAv"; // Corrected table name
 
-                const processedData = dataFlattened.map(d => ({
-                    id: d.id,
-                    parentId: d['parentid'] && d['parentid'].trim() !== "" ? d['parentid'] : null,
-                    name: d.name,
-                    positionName: d.positionName,
-                    imageUrl: d.imageUrl,
-                    relationshipStatus: d.relationshipStatus
-                }));
+        // API URL to query Glide tables
+        const url = `https://api.glideapp.io/api/function/queryTables`;
 
-                const rootNodes = processedData.filter(d => !d.parentId);
-                if (rootNodes.length > 1) {
-                    console.error("Multiple root nodes detected! Only one root node is allowed.");
-                    return;
+        // Function to fetch data from the Glide API
+        async function fetchOrgData() {
+            const payload = {
+                appID: appId,
+                queries: [
+                    {
+                        tableName: tableName,
+                        utc: true
+                    }
+                ]
+            };
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch data from Glide API.');
                 }
 
-                const relationshipColors = {
-                    "good": "#4CAF50",
-                    "neutral": "#FFC107",
-                    "bad": "#F44336"
-                };
+                const data = await response.json();
+                if (data[0] && data[0].rows) {
+                    const rows = data[0].rows;
+                    populateOrgChart(rows);
+                } else {
+                    console.error('Error: Invalid data format received from API');
+                }
+            } catch (error) {
+                console.error('Error fetching data from Glide API:', error);
+            }
+        }
 
-                // Initialize the organization chart
-                chart = new d3.OrgChart()
-                  .container('.chart-container')
-                  .data(processedData)
-                  .nodeHeight((d) => 85)
-                  .nodeWidth((d) => 220)
-                  .childrenMargin((d) => 50)
-                  .compactMarginBetween((d) => 25)
-                  .compactMarginPair((d) => 50)
-                  .neightbourMargin((a, b) => 25)
-                  .siblingsMargin((d) => 25)
-                  .buttonContent(({ node }) => {
+        // Function to process the fetched data and render the org chart
+        function populateOrgChart(data) {
+            const processedData = data.map(d => ({
+                id: d.$rowID,  // Use Row ID as the unique identifier
+                parentId: d["0d8UY"] || null,  // Set parentId to the Superior ID ("0d8UY")
+                name: d["6A8CJ"],  // Full Name
+                positionName: d["bU5yz"],  // Position Title
+                imageUrl: d["URiG8"],  // Image URL
+                relationshipStatus: d["lPpLf"]  // Relationship Status
+            }));
+
+            // Debugging: Log the processed data
+            console.log('Processed Data:', processedData);
+
+            // Identify root nodes (nodes with no parent)
+            const rootNodes = processedData.filter(d => !d.parentId);
+            console.log('Root Nodes Found:', rootNodes);
+
+            // Check if there are multiple root nodes
+            if (rootNodes.length > 1) {
+                console.error("Multiple root nodes detected! Only one root node is allowed.");
+                return; // Stop execution if multiple root nodes are found
+            }
+
+            const relationshipColors = {
+                "good": "#4CAF50",
+                "neutral": "#FFC107",
+                "bad": "#F44336"
+            };
+
+            // Initialize the organization chart
+            chart = new d3.OrgChart()
+                .container('.chart-container')
+                .data(processedData)
+                .nodeHeight((d) => 85)
+                .nodeWidth((d) => 220)
+                .childrenMargin((d) => 50)
+                .compactMarginBetween((d) => 25)
+                .compactMarginPair((d) => 50)
+                .neightbourMargin((a, b) => 25)
+                .siblingsMargin((d) => 25)
+                .buttonContent(({ node }) => {
                     return `<div style="px;color:#716E7B;border-radius:5px;padding:4px;font-size:10px;margin:auto auto;background-color:white;border: 1px solid #E4E2E9"> 
                                 <span style="font-size:9px">${node.children ? `<i class="fas fa-angle-up"></i>` : `<i class="fas fa-angle-down"></i>`}</span> 
                                 ${node.data._directSubordinates} 
                             </div>`;
-                  })
-                  .linkUpdate(function (d) {
+                })
+                .linkUpdate(function (d) {
                     d3.select(this)
-                      .attr('stroke', (d) => d.data._upToTheRootHighlighted ? '#152785' : '#E4E2E9')
-                      .attr('stroke-width', (d) => d.data._upToTheRootHighlighted ? 5 : 1);
+                        .attr('stroke', (d) => d.data._upToTheRootHighlighted ? '#152785' : '#E4E2E9')
+                        .attr('stroke-width', (d) => d.data._upToTheRootHighlighted ? 5 : 1);
 
                     if (d.data._upToTheRootHighlighted) {
-                      d3.select(this).raise();
+                        d3.select(this).raise();
                     }
-                  })
-                  .nodeContent(function (d) {
+                })
+                .nodeContent(function (d) {
                     const color = relationshipColors[d.data.relationshipStatus] || "#FFFFFF";
 
                     return `
@@ -119,31 +167,30 @@
                             </div>
                         </div>
                     `;
-                  })
-                  .render();
-            })
-            .catch(error => {
-                console.error("Error loading CSV data:", error);
-            });
-        });
+                })
+                .render();
+        }
 
-        // Search function
+        // Function to filter the chart based on search input
         function filterChart(e) {
-            const value = e.srcElement.value.toLowerCase();
+            const value = e.target.value.toLowerCase();
+
             chart.clearHighlighting();
 
             const data = chart.data();
-            data.forEach(d => d._expanded = false); // Collapse all nodes
-
             data.forEach(d => {
-                if (value !== '' && d.name.toLowerCase().includes(value)) {
-                    d._highlighted = true;  // Highlight matching nodes
-                    d._expanded = true;     // Expand matching nodes
+                d._expanded = false; // Collapse all nodes by default
+                if (value && d.name.toLowerCase().includes(value)) {
+                    d._highlighted = true;
+                    d._expanded = true; // Expand node if it matches the search
                 }
             });
 
-            chart.data(data).render().fit();  // Re-render the chart with updated data
+            chart.data(data).render().fit();
         }
+
+        // Call the function to fetch and render the org chart
+        fetchOrgData();
     </script>
 
 </body>
