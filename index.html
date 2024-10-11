@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Organization Chart</title>
+    <title>Organization Chart with Search</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -16,6 +16,12 @@
             height: 1200px;
             background-color: #fffeff;
         }
+        input[type="search"] {
+            margin-bottom: 10px;
+            padding: 10px;
+            width: 300px;
+            font-size: 16px;
+        }
     </style>
     <link
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
@@ -24,7 +30,11 @@
 </head>
 <body>
 
-    <h1>Sample Organization Chart</h1>
+    <h1>Sample Organization Chart with Search</h1>
+
+    <!-- Search input field -->
+    <input type="search" placeholder="Search by name" oninput="filterChart(event)" />
+
     <div class="chart-container"></div>
 
     <!-- D3.js Library -->
@@ -35,50 +45,37 @@
     <script src="https://cdn.jsdelivr.net/npm/d3-flextree@2.1.2/build/d3-flextree.js"></script>
 
     <script>
+        let chart;
+
         document.addEventListener('DOMContentLoaded', function () {
             // Fetch the data from Google Sheets (CSV format)
             d3.csv('https://docs.google.com/spreadsheets/d/16AlSV3D_nI3awWZ25tRP_JeqoGd2mpDD2xW_st8l49A/gviz/tq?tqx=out:csv&sheet=Sheet1')
             .then(dataFlattened => {
-                console.log("Fetched data:", dataFlattened);  // Log the fetched data for debugging
+                console.log("Fetched data:", dataFlattened);
 
-                // Log the keys of the first row to see the field names
-                console.log("CSV Keys:", Object.keys(dataFlattened[0]));
+                const processedData = dataFlattened.map(d => ({
+                    id: d.id,
+                    parentId: d['parentid'] && d['parentid'].trim() !== "" ? d['parentid'] : null,
+                    name: d.name,
+                    positionName: d.positionName,
+                    imageUrl: d.imageUrl,
+                    relationshipStatus: d.relationshipStatus
+                }));
 
-                // Explicitly log the parentId values for each node to inspect them
-                dataFlattened.forEach(d => {
-                    console.log(`ID: ${d.id}, ParentID: "${d.parentid}"`);  // Log each parentId as a string to see if any are empty or incorrect
-                });
-
-                // Convert empty parentId values to null
-                const processedData = dataFlattened.map(d => {
-                    return {
-                        id: d.id,
-                        parentId: d['parentid'] && d['parentid'].trim() !== "" ? d['parentid'] : null,  // Access parentId using field name and trim any whitespace
-                        name: d.name,
-                        positionName: d.positionName,
-                        imageUrl: d.imageUrl,
-                        relationshipStatus: d.relationshipStatus
-                    };
-                });
-
-                // Debugging step: Check if there are still multiple root nodes
                 const rootNodes = processedData.filter(d => !d.parentId);
-                console.log("Root nodes found after processing:", rootNodes);
-
                 if (rootNodes.length > 1) {
                     console.error("Multiple root nodes detected! Only one root node is allowed.");
                     return;
                 }
 
-                // Relationship colors based on status
                 const relationshipColors = {
-                    "good": "#4CAF50",   // Green for good relationships
-                    "neutral": "#FFC107", // Yellow for neutral relationships
-                    "bad": "#F44336"     // Red for bad relationships
+                    "good": "#4CAF50",
+                    "neutral": "#FFC107",
+                    "bad": "#F44336"
                 };
 
                 // Initialize the organization chart
-                const chart = new d3.OrgChart()
+                chart = new d3.OrgChart()
                   .container('.chart-container')
                   .data(processedData)
                   .nodeHeight((d) => 85)
@@ -104,8 +101,7 @@
                     }
                   })
                   .nodeContent(function (d) {
-                    // Get the relationship status and corresponding color
-                    const color = relationshipColors[d.data.relationshipStatus] || "#FFFFFF"; // Default to white
+                    const color = relationshipColors[d.data.relationshipStatus] || "#FFFFFF";
 
                     return `
                         <div style="font-family: 'Inter', sans-serif; background-color:#FFFFFF; position:absolute; margin-top:-1px; margin-left:-1px; width:${d.width}px; height:${d.height}px; border-radius:10px; border: 1px solid #E4E2E9;">
@@ -130,6 +126,24 @@
                 console.error("Error loading CSV data:", error);
             });
         });
+
+        // Search function
+        function filterChart(e) {
+            const value = e.srcElement.value.toLowerCase();
+            chart.clearHighlighting();
+
+            const data = chart.data();
+            data.forEach(d => d._expanded = false); // Collapse all nodes
+
+            data.forEach(d => {
+                if (value !== '' && d.name.toLowerCase().includes(value)) {
+                    d._highlighted = true;  // Highlight matching nodes
+                    d._expanded = true;     // Expand matching nodes
+                }
+            });
+
+            chart.data(data).render().fit();  // Re-render the chart with updated data
+        }
     </script>
 
 </body>
